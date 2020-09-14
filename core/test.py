@@ -12,7 +12,7 @@
 import sys
 import json
 
-import ModbusTcpServerAdapter as adapter
+import ModbusServerAdapter as adapter
 import modbus_tk
 import modbus_tk.defines as cst
 KEY_HOLDING_REG = "holding_registers"
@@ -46,7 +46,7 @@ def main():
     """main"""
     try:
         #Create the server
-        server = adapter.ModbusTcpServerAdapter()
+        server = adapter.ModbusServerAdapter()
 
         server.start()
         server.add_client(1)

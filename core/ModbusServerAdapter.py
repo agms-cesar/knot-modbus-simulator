@@ -1,8 +1,45 @@
 import modbus_tk
 import modbus_tk.defines as cst
 from modbus_tk import modbus_tcp
+from abc import ABC, abstractmethod
 
-class ModbusTcpServerAdapter:
+HOLDING = 0
+DIGITAL = 1
+
+class ModbusServerAdapter(ABC):
+    def __init__(self):
+        self.running = False
+        super().__init__()
+
+    @abstractmethod
+    def start(self) -> bool:
+        """Starts modbus' server adapter interface. """
+        pass
+
+    @abstractmethod
+    def add_client(self, id) -> bool:
+        pass
+
+    @abstractmethod
+    def add_block(self, client_id, name, block_type,
+                  start_address, length) -> bool:
+        pass
+    
+    @abstractmethod
+    def set_register(self, client_id, block_name, address, value) -> bool:
+        pass
+    
+    @abstractmethod
+    def stop(self) -> bool:
+        pass
+
+class ModbusTcpServerAdapter(ModbusServerAdapter):
+
+    block_type_map = {
+        HOLDING : cst.HOLDING_REGISTERS,
+        DIGITAL : cst.DISCRETE_INPUTS
+    }
+
     def __init__(self):
         self.running = False
         self.tcp_server = None
@@ -21,11 +58,13 @@ class ModbusTcpServerAdapter:
             self.tcp_server = modbus_tcp.TcpServer()
             self.tcp_server.start()
             self.running = True
+            return self.running
         except:
             self.logger.error("Some error occurred while \
                 creating a new tcp_server")
             self.tcp_server.stop()
             self.running = False
+            return self.running
 
     def add_client(self, id):
         if self.running == True:
@@ -45,7 +84,8 @@ class ModbusTcpServerAdapter:
         if self.running == True:
             try:
                 client = self.tcp_server.get_slave(client_id)
-                client.add_block(name, block_type, start_address,
+                mapped_block = self.block_type_map[block_type]
+                client.add_block(name, mapped_block, start_address,
                                  length)
                 return True
             except:
@@ -76,4 +116,5 @@ class ModbusTcpServerAdapter:
             self.running = False
         else:
             self.logger.warning("Tcp server not running.")
+        return True
 
