@@ -33,7 +33,7 @@ class ModbusServerAdapter(ABC):
     def stop(self) -> bool:
         pass
 
-class ModbusTcpServerAdapter(ModbusServerAdapter):
+class ModbusTkTcpServerAdapter(ModbusServerAdapter):
 
     block_type_map = {
         HOLDING : cst.HOLDING_REGISTERS,

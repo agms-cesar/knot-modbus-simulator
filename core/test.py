@@ -46,7 +46,7 @@ def main():
     """main"""
     try:
         #Create the server
-        server = adapter.ModbusServerAdapter()
+        server = adapter.ModbusTkTcpServerAdapter()
 
         server.start()
         server.add_client(1)
