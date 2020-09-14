@@ -1,0 +1,101 @@
+{
+	"id": "0",
+	"holding_registers": {
+		"block_name": "0",
+		"registers": [
+			{
+				"address": "0",
+				"value": "0xEA60"
+			},
+			{
+				"address": "10",
+				"value": "0x6C00"
+			},
+			{
+				"address": "11",
+				"value": "0x88CA"
+			},
+			{
+				"address": "20",
+				"value": "0x2800"
+			},
+			{
+				"address": "21",
+				"value": "0xEE6B"
+			},
+			{
+				"address": "30",
+				"value": "0x0000"
+			},
+			{
+				"address": "31",
+				"value": "0xFB12"
+			},
+			{
+				"address": "32",
+				"value": "0x03D3"
+			},
+			{
+				"address": "33",
+				"value": "0xF0BC"
+			},
+			{
+				"address": "40",
+				"value": "0x0000"
+			},
+			{
+				"address": "41",
+				"value": "0x314C"
+			},
+			{
+				"address": "42",
+				"value": "0xD9B8"
+			},
+			{
+				"address": "43",
+				"value": "0x98A7"
+			}
+		]
+	},
+	"digital_inputs": {
+		"block_name": "1",
+		"registers": [
+			{
+				"address": "0",
+				"value": "1"
+			},
+			{
+				"address": "16",
+				"value": "0"
+			},
+			{
+				"address": "17",
+				"value": "1"
+			},
+			{
+				"address": "18",
+				"value": "0"
+			},
+			{
+				"address": "19",
+				"value": "1"
+			},
+			{
+				"address": "20",
+				"value": "1"
+			},
+			{
+				"address": "21",
+				"value": "1"
+			},
+			{
+				"address": "22",
+				"value": "1"
+			},
+			{
+				"address": "23",
+				"value": "1"
+			}
+		]
+	}
+}
