@@ -1,39 +1,14 @@
 import modbus_tk
 import modbus_tk.defines as cst
 from modbus_tk import modbus_tcp
-from abc import ABC, abstractmethod
+
+import protocol_core
+from protocol_core.iserver_adapter import IServerAdapter
 
 HOLDING = 0
 DIGITAL = 1
 
-class ModbusServerAdapter(ABC):
-    def __init__(self):
-        self.running = False
-        super().__init__()
-
-    @abstractmethod
-    def start(self) -> bool:
-        """Starts modbus' server adapter interface. """
-        pass
-
-    @abstractmethod
-    def add_modbus_server(self, server_id) -> bool:
-        pass
-
-    @abstractmethod
-    def add_block(self, server_id: int, name, block_type,
-                  start_address, length) -> bool:
-        pass
-    
-    @abstractmethod
-    def set_register(self, server_id, block_name, address, value) -> bool:
-        pass
-    
-    @abstractmethod
-    def stop(self) -> bool:
-        pass
-
-class ModbusTkTcpServerAdapter(ModbusServerAdapter):
+class ModbusTkTcpServerAdapter(IServerAdapter):
 
     _block_type_map = {
         HOLDING : cst.HOLDING_REGISTERS,
@@ -65,7 +40,8 @@ class ModbusTkTcpServerAdapter(ModbusServerAdapter):
             self.running = False
             return self.running
 
-    def add_modbus_server(self, id):
+    def add_data_server(self, id):
+        """ Adds a new modbus server """
         if self.running == True:
             try:
                 self.tcp_server.add_slave(id)
@@ -79,7 +55,9 @@ class ModbusTkTcpServerAdapter(ModbusServerAdapter):
             self.logger.warning("Tcp server not running yet")
             return False
 
-    def add_block(self, server_id, name, block_type, start_address, length):
+    def add_data_block(self, server_id, name, block_type,
+                       start_address, length):
+        """ Adds a new block of register to a modbuser server """
         if self.running == True:
             try:
                 server = self.tcp_server.get_slave(server_id)
@@ -96,7 +74,8 @@ class ModbusTkTcpServerAdapter(ModbusServerAdapter):
             self.logger.warning("Tcp server not running yet.")
             return False
     
-    def set_register(self, server_id, block_name, address, value):
+    def set_data_value(self, server_id, block_name, address, value):
+        """ Updates a modbus server register value """
         if self.running == True:
             try:
                 server = self.tcp_server.get_slave(server_id)
@@ -111,6 +90,8 @@ class ModbusTkTcpServerAdapter(ModbusServerAdapter):
             return False
     
     def stop(self):
+        """ Stops the tcp server and closes modbus servers
+            connections """
         if self.running == True:
             self.logger.info("Tcp server: Stopping...")
             self.tcp_server.stop()

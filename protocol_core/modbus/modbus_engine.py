@@ -4,7 +4,7 @@
 # Vai guardar os registers criados
 # Vai setar os regs
 from .modbus_server_adapter import ModbusTkTcpServerAdapter
-import defs as defs
+import ..defs as defs
 
 class ModbusEngine:
     _adapter = None
