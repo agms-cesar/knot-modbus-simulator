@@ -1,0 +1,18 @@
+{
+	"body_maker": [{
+            "model_name": "evento",
+            "start_address":0,
+			"data_bits_offset": 1
+		},
+		{
+            "model_name": "cod_maquina",
+            "start_address":0,
+			"data_bits_offset": 16
+		},
+		{
+            "model_name": "cod_falha",
+            "start_address":10,
+			"data_bits_offset": 16
+		}
+	]
+}

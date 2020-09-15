@@ -17,16 +17,16 @@ class ModbusServerAdapter(ABC):
         pass
 
     @abstractmethod
-    def add_client(self, id) -> bool:
+    def add_modbus_server(self, server_id) -> bool:
         pass
 
     @abstractmethod
-    def add_block(self, client_id, name, block_type,
+    def add_block(self, server_id: int, name, block_type,
                   start_address, length) -> bool:
         pass
     
     @abstractmethod
-    def set_register(self, client_id, block_name, address, value) -> bool:
+    def set_register(self, server_id, block_name, address, value) -> bool:
         pass
     
     @abstractmethod
@@ -35,7 +35,7 @@ class ModbusServerAdapter(ABC):
 
 class ModbusTkTcpServerAdapter(ModbusServerAdapter):
 
-    block_type_map = {
+    _block_type_map = {
         HOLDING : cst.HOLDING_REGISTERS,
         DIGITAL : cst.DISCRETE_INPUTS
     }
@@ -43,7 +43,6 @@ class ModbusTkTcpServerAdapter(ModbusServerAdapter):
     def __init__(self):
         self.running = False
         self.tcp_server = None
-        self.tcp_client = None
         self.logger = modbus_tk.utils.create_logger(name="console",
             record_format="%(message)s")
     
@@ -66,26 +65,28 @@ class ModbusTkTcpServerAdapter(ModbusServerAdapter):
             self.running = False
             return self.running
 
-    def add_client(self, id):
+    def add_modbus_server(self, id):
         if self.running == True:
             try:
                 self.tcp_server.add_slave(id)
-                self.logger.info("Added tcp client with id = %d ", id)
+                self.logger.info("Added modbus server with id = %d ", id)
                 return True
             except:
-                self.logger.error("Error while adding new client (id =%d)", id)
+                self.logger.error("Error while adding new server (id =%d)", id)
                 return False
 
         else:
             self.logger.warning("Tcp server not running yet")
             return False
 
-    def add_block(self, client_id, name, block_type, start_address, length):
+    def add_block(self, server_id, name, block_type, start_address, length):
         if self.running == True:
             try:
-                client = self.tcp_server.get_slave(client_id)
-                mapped_block = self.block_type_map[block_type]
-                client.add_block(name, mapped_block, start_address,
+                server = self.tcp_server.get_slave(server_id)
+                mapped_block = self._block_type_map[block_type]
+                if mapped_block == None:
+                    return False
+                server.add_block(name, mapped_block, start_address,
                                  length)
                 return True
             except:
@@ -95,11 +96,11 @@ class ModbusTkTcpServerAdapter(ModbusServerAdapter):
             self.logger.warning("Tcp server not running yet.")
             return False
     
-    def set_register(self, client_id, block_name, address, value):
+    def set_register(self, server_id, block_name, address, value):
         if self.running == True:
             try:
-                client = self.tcp_server.get_slave(client_id)
-                client.set_values(block_name, address, value)
+                server = self.tcp_server.get_slave(server_id)
+                server.set_values(block_name, address, value)
                 return True
             except:
                 self.logger.error("Some error occurred while trying to add \
