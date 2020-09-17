@@ -4,47 +4,80 @@
 # Vai guardar os registers criados
 # Vai setar os regs
 from .modbus_server_adapter import ModbusTkTcpServerAdapter
-import ..defs as defs
+from protocol_core.iprotocol_engine import IProtocolEngine
+import protocol_core.defines as defs
 
-class ModbusEngine:
+class ModbusEngine(IProtocolEngine):
     _adapter = None
-    _things_map = []
+    _data_servers_map = {}
+
     def __init__(self, adapter: ModbusTkTcpServerAdapter):
         self._adapter = adapter
         ret = adapter.start()
         if ret != True:
             raise InterruptedError("Unable to start tcp server")
-        self._has_things = False
+        self._has_servers = False
     
-    def load_things(self, things) -> bool:
-        """ Carrega uma lista de things e cria os blocos no
-            servidor de modbus """
-        self._things_map.clear()
-        self._has_things = False
-        id = 0
-        for thing in things:
-            data = {}
-            data = thing
-            id = thing[defs.THING_ID]
-            name = thing[defs.THING_NAME]
-            address = thing[defs.THING_ADDRESS]
-            offset = thing[defs.THING_OFFSET]
-            if id == None or name == None or address == None \
-            or offset == None:
-                self._things_map.clear()
-                return False
-            
-    def set_things_values(self, things_values) -> bool:
-        """ Seta os valores das things """
+    def load_server(self, data_model: {}) -> bool:
+        """ Loads a data model as modbus server """
+        server_id = data_model[defs.ID]
+        if server_id in self._data_servers_map:
+            return False
+        ret = self._adapter.add_data_server(server_id)
+        if ret is False:
+            return False
+        register_len = (data_model[defs.REGISTER_DATA])[defs.BLOCK_LENGTH]
+        digital_len = (data_model[defs.DIGITAL_DATA])[defs.BLOCK_LENGTH]
+        register_start_address = (data_model[defs.REGISTER_DATA])\
+            [defs.BLOCK_START_ADDRESS]
+        digital_start_address = (data_model[defs.DIGITAL_DATA])\
+            [defs.BLOCK_START_ADDRESS]
+        data_server_registers = {
+            defs.REGISTER_DATA: (data_model[defs.REGISTER_DATA])[defs.BLOCKS],
+            defs.DIGITAL_DATA: (data_model[defs.DIGITAL_DATA])[defs.BLOCKS]
+        }
+        print(register_start_address)
+        print(register_len)
+        if digital_len > 0:
+            self._adapter.add_data_block(server_id, defs.DIGITAL_DATA,
+                defs.BLOCK_DIGITAL_RO, digital_start_address, digital_len)
+        if register_len > 0:
+            self._adapter.add_data_block(server_id, defs.REGISTER_DATA,
+                defs.BLOCK_REGULAR_RW, register_start_address, register_len)
+        self._data_servers_map[server_id] = data_server_registers
+        self._load_blocks(server_id, data_server_registers)
+        return ret
+
+    def _load_blocks(self, server_id: int, data_registers: {}) -> bool:
+        for register in data_registers[defs.REGISTER_DATA]:
+            start_address = register[defs.ADDRESS]
+            offset = 0
+            for value in register[defs.DATA_VALUE]:
+                print(value)
+                self._adapter.set_data_value(server_id, defs.REGISTER_DATA,
+                    (start_address+offset), int(value, 16))
+                offset += 1
+
+        for digital_in in data_registers[defs.DIGITAL_DATA]:
+            start_address = digital_in[defs.ADDRESS]
+            offset = 0
+            for value in digital_in[defs.DATA_VALUE]:
+                self._adapter.set_data_value(server_id, defs.DIGITAL_DATA,
+                    (start_address+offset), int(value))
+                offset += 1
 
     def _update(self) -> bool:
         """ Atualiza os valores dos registradores do servidor modbus 
             com os valores atuais das things periodicamente """
-    
+        return False
+
     def set_update_timer(self, timeout):
         """ Seta os valor de timeout para atualizar os registers
             do modbus """
-            
+    
+    def _validate_data_item(self, item: dict) -> bool:
+        """ Validates if data item has all fields filled correctly """
+        return True
             
             
 

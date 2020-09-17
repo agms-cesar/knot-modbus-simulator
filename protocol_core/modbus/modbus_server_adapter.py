@@ -1,18 +1,20 @@
+import sys
+
 import modbus_tk
 import modbus_tk.defines as cst
 from modbus_tk import modbus_tcp
 
 import protocol_core
 from protocol_core.iserver_adapter import IServerAdapter
-
-HOLDING = 0
-DIGITAL = 1
+import protocol_core.defines as defs
 
 class ModbusTkTcpServerAdapter(IServerAdapter):
 
     _block_type_map = {
-        HOLDING : cst.HOLDING_REGISTERS,
-        DIGITAL : cst.DISCRETE_INPUTS
+        defs.BLOCK_DIGITAL_RO: cst.DISCRETE_INPUTS,
+        defs.BLOCK_DIGITAL_RW: cst.COILS,
+        defs.BLOCK_REGULAR_RO: cst.ANALOG_INPUTS,
+        defs.BLOCK_REGULAR_RW: cst.HOLDING_REGISTERS
     }
 
     def __init__(self):
@@ -31,6 +33,7 @@ class ModbusTkTcpServerAdapter(IServerAdapter):
         try:
             self.tcp_server = modbus_tcp.TcpServer()
             self.tcp_server.start()
+            self.tcp_server.set_verbose(True)
             self.running = True
             return self.running
         except:
@@ -60,6 +63,9 @@ class ModbusTkTcpServerAdapter(IServerAdapter):
         """ Adds a new block of register to a modbuser server """
         if self.running == True:
             try:
+                self.logger.info("Adding block for server (%d) - block name (%s) \
+                    - start_address (%d) and length (%d).", server_id, name, 
+                    start_address, length)
                 server = self.tcp_server.get_slave(server_id)
                 mapped_block = self._block_type_map[block_type]
                 if mapped_block == None:
@@ -67,8 +73,9 @@ class ModbusTkTcpServerAdapter(IServerAdapter):
                 server.add_block(name, mapped_block, start_address,
                                  length)
                 return True
-            except:
+            except Exception as err:
                 self.logger.error("Error occured while adding new block.")
+                print(err)
                 return False
         else:
             self.logger.warning("Tcp server not running yet.")
@@ -78,6 +85,9 @@ class ModbusTkTcpServerAdapter(IServerAdapter):
         """ Updates a modbus server register value """
         if self.running == True:
             try:
+                self.logger.info("set value for server (%d) - block name (%s) \
+                    - start_address (%d) and value (%d).", server_id, block_name, 
+                    address, value)
                 server = self.tcp_server.get_slave(server_id)
                 server.set_values(block_name, address, value)
                 return True
