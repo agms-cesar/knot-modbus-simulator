@@ -14,7 +14,6 @@ class ConfigLoader:
             server_model[defs.ID] = model_id
             server_model[defs.REGISTER_DATA] = registers
             server_model[defs.DIGITAL_DATA] = digitals
-            print(server_model)
             return server_model
 
     def _parse_registers(self, registers):

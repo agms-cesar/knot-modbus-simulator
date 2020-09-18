@@ -17,11 +17,10 @@ class ModbusTkTcpServerAdapter(IServerAdapter):
         defs.BLOCK_REGULAR_RW: cst.HOLDING_REGISTERS
     }
 
-    def __init__(self):
+    def __init__(self, logger):
         self.running = False
         self.tcp_server = None
-        self.logger = modbus_tk.utils.create_logger(name="console",
-            record_format="%(message)s")
+        self._logger = logger
     
     def __del__(self):
         if self.running == True:
@@ -33,11 +32,10 @@ class ModbusTkTcpServerAdapter(IServerAdapter):
         try:
             self.tcp_server = modbus_tcp.TcpServer()
             self.tcp_server.start()
-            self.tcp_server.set_verbose(True)
             self.running = True
             return self.running
         except:
-            self.logger.error("Some error occurred while \
+            self._logger.error("Some error occurred while \
                 creating a new tcp_server")
             self.tcp_server.stop()
             self.running = False
@@ -48,14 +46,14 @@ class ModbusTkTcpServerAdapter(IServerAdapter):
         if self.running == True:
             try:
                 self.tcp_server.add_slave(id)
-                self.logger.info("Added modbus server with id = %d ", id)
+                self._logger.info("Added modbus server with id = %d ", id)
                 return True
             except:
-                self.logger.error("Error while adding new server (id =%d)", id)
+                self._logger.error("Error while adding new server (id =%d)", id)
                 return False
 
         else:
-            self.logger.warning("Tcp server not running yet")
+            self._logger.warning("Tcp server not running yet")
             return False
 
     def add_data_block(self, server_id, name, block_type,
@@ -63,7 +61,7 @@ class ModbusTkTcpServerAdapter(IServerAdapter):
         """ Adds a new block of register to a modbuser server """
         if self.running == True:
             try:
-                self.logger.info("Adding block for server (%d) - block name (%s) \
+                self._logger.info("Adding block for server (%d) - block name (%s) \
                     - start_address (%d) and length (%d).", server_id, name, 
                     start_address, length)
                 server = self.tcp_server.get_slave(server_id)
@@ -74,39 +72,39 @@ class ModbusTkTcpServerAdapter(IServerAdapter):
                                  length)
                 return True
             except Exception as err:
-                self.logger.error("Error occured while adding new block.")
+                self._logger.error("Error occured while adding new block.")
                 print(err)
                 return False
         else:
-            self.logger.warning("Tcp server not running yet.")
+            self._logger.warning("Tcp server not running yet.")
             return False
     
     def set_data_value(self, server_id, block_name, address, value):
         """ Updates a modbus server register value """
         if self.running == True:
             try:
-                self.logger.info("set value for server (%d) - block name (%s) \
+                self._logger.info("set value for server (%d) - block name (%s) \
                     - start_address (%d) and value (%d).", server_id, block_name, 
                     address, value)
                 server = self.tcp_server.get_slave(server_id)
                 server.set_values(block_name, address, value)
                 return True
             except:
-                self.logger.error("Some error occurred while trying to add \
+                self._logger.error("Some error occurred while trying to add \
                     a value to block: %s", block_name)
                 return False
         else:
-            self.logger.warning("Tcp server not running yet.")
+            self._logger.warning("Tcp server not running yet.")
             return False
     
     def stop(self):
         """ Stops the tcp server and closes modbus servers
             connections """
         if self.running == True:
-            self.logger.info("Tcp server: Stopping...")
+            self._logger.info("Tcp server: Stopping...")
             self.tcp_server.stop()
             self.running = False
         else:
-            self.logger.warning("Tcp server not running.")
+            self._logger.warning("Tcp server not running.")
         return True
 

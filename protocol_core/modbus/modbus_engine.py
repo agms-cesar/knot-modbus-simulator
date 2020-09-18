@@ -11,12 +11,14 @@ class ModbusEngine(IProtocolEngine):
     _adapter = None
     _data_servers_map = {}
 
-    def __init__(self, adapter: ModbusTkTcpServerAdapter):
+    def __init__(self, adapter: ModbusTkTcpServerAdapter, logger):
         self._adapter = adapter
+        self._logger = logger
         ret = adapter.start()
         if ret != True:
             raise InterruptedError("Unable to start tcp server")
         self._has_servers = False
+        self._logger.info("Tcp server started")
     
     def load_server(self, data_model: {}) -> bool:
         """ Loads a data model as modbus server """
@@ -36,8 +38,7 @@ class ModbusEngine(IProtocolEngine):
             defs.REGISTER_DATA: (data_model[defs.REGISTER_DATA])[defs.BLOCKS],
             defs.DIGITAL_DATA: (data_model[defs.DIGITAL_DATA])[defs.BLOCKS]
         }
-        print(register_start_address)
-        print(register_len)
+
         if digital_len > 0:
             self._adapter.add_data_block(server_id, defs.DIGITAL_DATA,
                 defs.BLOCK_DIGITAL_RO, digital_start_address, digital_len)
@@ -46,6 +47,7 @@ class ModbusEngine(IProtocolEngine):
                 defs.BLOCK_REGULAR_RW, register_start_address, register_len)
         self._data_servers_map[server_id] = data_server_registers
         self._load_blocks(server_id, data_server_registers)
+        self._logger.info("Server added id (%d):", server_id)
         return ret
 
     def _load_blocks(self, server_id: int, data_registers: {}) -> bool:
@@ -53,7 +55,6 @@ class ModbusEngine(IProtocolEngine):
             start_address = register[defs.ADDRESS]
             offset = 0
             for value in register[defs.DATA_VALUE]:
-                print(value)
                 self._adapter.set_data_value(server_id, defs.REGISTER_DATA,
                     (start_address+offset), int(value, 16))
                 offset += 1
@@ -66,6 +67,9 @@ class ModbusEngine(IProtocolEngine):
                     (start_address+offset), int(value))
                 offset += 1
 
+    def stop(self):
+        self._adapter.stop()
+        
     def _update(self) -> bool:
         """ Atualiza os valores dos registradores do servidor modbus 
             com os valores atuais das things periodicamente """
